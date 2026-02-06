@@ -6,7 +6,8 @@ import {
   BarChart3,
   Dumbbell,
   Clock,
-  Shield
+  Shield,
+  Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CrowdLevel } from '../components/CrowdLevel';
@@ -199,6 +200,156 @@ export function Landing() {
                 alt="Modern gym interior"
                 className="w-full h-full object-cover"
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Membership Plans */}
+      <section className="py-12 sm:py-16 md:py-20 bg-neutral-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          {/* Section Header */}
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Choose Your Plan
+            </h2>
+            <p className="text-base sm:text-lg text-neutral-400 max-w-2xl mx-auto">
+              Flexible membership options to fit your fitness goals and budget
+            </p>
+          </div>
+
+          {/* Plans Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            {/* Basic Plan */}
+            <div className="bg-neutral-800 border border-neutral-700 rounded-2xl p-6 sm:p-8 hover:border-green-500/50 transition-all">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-white mb-2">Basic</h3>
+                <div className="flex items-baseline mb-2">
+                  <span className="text-4xl font-bold text-white">₹2,000</span>
+                  <span className="text-neutral-400 ml-2">/month</span>
+                </div>
+                <p className="text-neutral-400 text-sm">Perfect for beginners</p>
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Access to gym equipment</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Locker facility</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Basic workout guidance</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Valid for 1 month</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => navigate('/signup')}
+                className="w-full bg-neutral-700 hover:bg-neutral-600 text-white py-3 rounded-lg font-semibold transition-all"
+              >
+                Get Started
+              </button>
+            </div>
+
+            {/* Premium Plan */}
+            <div className="relative bg-neutral-800 border-2 border-green-500 rounded-2xl p-6 sm:p-8 md:scale-105 shadow-lg shadow-green-500/20">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-black text-xs font-bold px-4 py-1 rounded-full">
+                  MOST POPULAR
+                </span>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-white mb-2">Premium</h3>
+                <div className="flex items-baseline mb-2">
+                  <span className="text-4xl font-bold text-white">₹5,000</span>
+                  <span className="text-neutral-400 ml-2">/3 months</span>
+                </div>
+                <p className="text-neutral-400 text-sm">Best value for money</p>
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">All Basic features</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">2 personal training sessions</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Diet consultation</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Valid for 3 months</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Priority booking</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => navigate('/signup')}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-black py-3 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-green-500/30"
+              >
+                Get Started
+              </button>
+            </div>
+
+            {/* Platinum Plan */}
+            <div className="bg-neutral-800 border border-neutral-700 rounded-2xl p-6 sm:p-8 hover:border-green-500/50 transition-all">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-white mb-2">Platinum</h3>
+                <div className="flex items-baseline mb-2">
+                  <span className="text-4xl font-bold text-white">₹15,000</span>
+                  <span className="text-neutral-400 ml-2">/year</span>
+                </div>
+                <p className="text-neutral-400 text-sm">Ultimate fitness experience</p>
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">All Premium features</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Unlimited personal training</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Advanced analytics</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Valid for 12 months</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Guest passes (2 per month)</span>
+                </li>
+                <li className="flex items-start gap-3 text-neutral-300">
+                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Exclusive member events</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => navigate('/signup')}
+                className="w-full bg-neutral-700 hover:bg-neutral-600 text-white py-3 rounded-lg font-semibold transition-all"
+              >
+                Get Started
+              </button>
             </div>
           </div>
         </div>

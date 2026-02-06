@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Dumbbell, CreditCard, Lock, CheckCircle } from 'lucide-react';
+import { Dumbbell, CreditCard, Lock, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Input } from '../components/ui/Input';
 
 export const PaymentPage = () => {
@@ -135,15 +135,26 @@ export const PaymentPage = () => {
 
       {/* Navigation */}
       <nav className="relative z-50 bg-black/40 backdrop-blur-md border-b border-neutral-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-center">
-          <div className="flex items-center space-x-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <button
+            onClick={() => navigate('/select-membership', { state: { userData } })}
+            className="flex items-center space-x-2 text-neutral-400 hover:text-white transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm">Back to Plans</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-2 hover:opacity-80 transition"
+          >
             <div className="bg-gradient-to-br from-green-400 to-emerald-500 p-2 rounded-lg">
               <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
             </div>
             <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
               FitTrack
             </span>
-          </div>
+          </button>
         </div>
       </nav>
 

@@ -172,14 +172,17 @@ export const SignUp = () => {
             <span className="text-sm">Back to Home</span>
           </button>
 
-          <div className="flex items-center space-x-2">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-2 hover:opacity-80 transition"
+          >
             <div className="bg-gradient-to-br from-green-400 to-emerald-500 p-2 rounded-lg">
               <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
             </div>
             <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
               FitTrack
             </span>
-          </div>
+          </button>
         </div>
       </nav>
 
