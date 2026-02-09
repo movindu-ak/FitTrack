@@ -5,7 +5,7 @@ export function MembershipPayments({ onNavigate }) {
   const plans = [
     {
       name: 'Basic',
-      price: 29,
+      price: 2000,
       period: 'month',
       discount: null,
       features: [
@@ -18,7 +18,7 @@ export function MembershipPayments({ onNavigate }) {
     },
     {
       name: 'Premium',
-      price: 79,
+      price: 4000,
       period: 'month',
       discount: null,
       features: [
@@ -32,10 +32,9 @@ export function MembershipPayments({ onNavigate }) {
     },
     {
       name: 'Annual Premium',
-      price: 799,
+      price: 30000,
       period: 'year',
-      discount: '15% off',
-      monthlyEquivalent: 66.58,
+      discount: null,
       features: [
         'Everything in Premium',
         '12 personal training sessions/year',
@@ -136,7 +135,7 @@ export function MembershipPayments({ onNavigate }) {
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="flex items-baseline space-x-1">
-                    <span className="text-4xl font-bold text-white">${plan.price}</span>
+                    <span className="text-4xl font-bold text-white">LKR{plan.price}</span>
                     <span className="text-neutral-400">/ {plan.period}</span>
                   </div>
                   {plan.monthlyEquivalent && (
@@ -156,7 +155,7 @@ export function MembershipPayments({ onNavigate }) {
                 </ul>
 
                 <button
-                  className={`w-full py-3 rounded-lg font-semibold transition-all ${
+                  className={`w-full py-3 rounded-lg font-semibold transition-all LKR{
                     plan.popular
                       ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-black hover:shadow-lg hover:shadow-green-500/50'
                       : 'bg-neutral-700 text-white hover:bg-neutral-600'

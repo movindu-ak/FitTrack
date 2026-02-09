@@ -7,14 +7,35 @@ import {
   Dumbbell,
   Clock,
   Shield,
-  Check
+  Check,
+  LogOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { CrowdLevel } from '../components/CrowdLevel';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 
 export function Landing() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/login');
+  };
 
   return (
     <div className="min-h-screen">
@@ -30,22 +51,60 @@ export function Landing() {
             </span>
           </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <button
-              onClick={() => navigate('/login')}
-              className="text-neutral-400 hover:text-white text-sm sm:text-base"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 text-black px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium text-sm sm:text-base"
-            >
-              Join Now
-            </button>
-          </div>
+          {!user && (
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <button
+                onClick={() => navigate('/login')}
+                className="text-neutral-400 hover:text-white text-sm sm:text-base"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate('/signup')}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 text-black px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium text-sm sm:text-base"
+              >
+                Join Now
+              </button>
+            </div>
+          )}
+          {user && (
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                onClick={() => {
+                  if (user.role === 'admin') {
+                    navigate('/admin-dashboard');
+                  } else if (user.role === 'trainer') {
+                    navigate('/trainer-dashboard');
+                  } else {
+                    navigate('/member-dashboard');
+                  }
+                }}
+                className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-black px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium text-sm sm:text-base"
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-medium text-sm sm:text-base border border-neutral-700"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </nav>
+
+      {/* Welcome Message */}
+      {user && (
+        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-b border-green-500/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+            <p className="text-lg sm:text-xl font-semibold text-white">
+              Welcome back, <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{user.name || user.email}</span>!
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <section className="relative overflow-hidden min-h-[600px] sm:min-h-[700px]">
@@ -70,20 +129,22 @@ export function Landing() {
             Next-gen gym management with real-time crowd monitoring and smart booking.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
-            <button
-              onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 text-black px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
-            >
-              Join Gym <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={() => navigate('/member-dashboard')}
-              className="bg-neutral-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl border border-neutral-700 text-sm sm:text-base"
-            >
-              View Crowd Status
-            </button>
-          </div>
+          {!user && (
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
+              <button
+                onClick={() => navigate('/signup')}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 text-black px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
+              >
+                Join Gym <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <button
+                onClick={() => navigate('/member-dashboard')}
+                className="bg-neutral-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl border border-neutral-700 text-sm sm:text-base"
+              >
+                View Crowd Status
+              </button>
+            </div>
+          )}
 
           <div className="max-w-sm">
             <p className="text-neutral-400 text-sm mb-3 flex items-center gap-2">

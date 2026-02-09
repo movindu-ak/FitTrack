@@ -1,19 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, User, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Navigation } from '../components/Navigation';
 
-export function BookingPage({ onNavigate }) {
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 0, 20));
-  const [selectedSlot, setSelectedSlot] = useState(null);
+export function BookingPage() {
+  const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedSlots, setSelectedSlots] = useState([]);
   const [bookingType, setBookingType] = useState('workout');
   const [selectedTrainer, setSelectedTrainer] = useState(null);
+  const [trainers, setTrainers] = useState([]);
+  const [loadingTrainers, setLoadingTrainers] = useState(false);
 
-  const trainers = [
-    { id: '1', name: 'Sarah Johnson', specialty: 'Strength Training', rating: 4.9, image: '👩‍🦰' },
-    { id: '2', name: 'Mike Chen', specialty: 'HIIT & Cardio', rating: 4.8, image: '👨' },
-    { id: '3', name: 'Emily Davis', specialty: 'Yoga & Flexibility', rating: 5.0, image: '👩' },
-    { id: '4', name: 'James Wilson', specialty: 'CrossFit', rating: 4.7, image: '👨‍🦱' },
-  ];
+  useEffect(() => {
+    if (bookingType === 'trainer') {
+      fetchTrainers();
+    }
+  }, [bookingType]);
+
+  const fetchTrainers = async () => {
+    setLoadingTrainers(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/auth/trainers', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setTrainers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching trainers:', error);
+    } finally {
+      setLoadingTrainers(false);
+    }
+  };
 
   const timeSlots = [
     { time: '6:00 AM - 7:30 AM', available: 15, total: 20, crowd: 'low' },
@@ -39,14 +63,64 @@ export function BookingPage({ onNavigate }) {
     return days;
   };
 
-  const handleBooking = () => {
-    alert(
-      `Booking confirmed! ${
-        bookingType === 'trainer'
-          ? `with ${trainers.find(t => t.id === selectedTrainer)?.name}`
-          : ''
-      }`
-    );
+  const handleBooking = async () => {
+    if (selectedSlots.length === 0) {
+      alert('Please select at least one time slot');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Create multiple bookings for each selected slot
+      const bookingPromises = selectedSlots.map(async (timeSlot) => {
+        const bookingData = {
+          type: bookingType,
+          date: selectedDate,
+          timeSlot
+        };
+
+        // Add trainer ID if it's a trainer booking
+        if (bookingType === 'trainer' && selectedTrainer) {
+          bookingData.trainer = selectedTrainer;
+        }
+
+        const response = await fetch('http://localhost:5000/api/bookings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(bookingData)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message);
+        }
+
+        return await response.json();
+      });
+
+      await Promise.all(bookingPromises);
+
+      const trainerName = trainers.find(t => t._id === selectedTrainer)?.name;
+      alert(
+        `${selectedSlots.length} booking(s) confirmed! ${
+          bookingType === 'trainer' && trainerName
+            ? `with ${trainerName}`
+            : ''
+        }\n\nRedirecting to your dashboard...`
+      );
+      
+      // Redirect to dashboard after successful booking
+      setTimeout(() => {
+        navigate('/member-dashboard');
+      }, 500);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      alert(`Booking failed: ${error.message}`);
+    }
   };
 
   const days = getDaysInMonth(selectedDate);
@@ -111,68 +185,98 @@ export function BookingPage({ onNavigate }) {
               </div>
 
               <div className="grid grid-cols-7 gap-2">
-                {days.map((day, index) =>
-                  day ? (
+                {days.map((day, index) => {
+                  if (!day) return <div key={index} />;
+                  
+                  // Check if day is in the past
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const dayDate = new Date(day);
+                  dayDate.setHours(0, 0, 0, 0);
+                  const isPast = dayDate < today;
+                  
+                  return (
                     <button
                       key={index}
-                      onClick={() => setSelectedDate(day)}
+                      onClick={() => !isPast && setSelectedDate(day)}
+                      disabled={isPast}
                       className={`p-2 rounded ${
-                        day.getDate() === selectedDate.getDate()
+                        isPast
+                          ? 'text-neutral-600 cursor-not-allowed opacity-50'
+                          : day.getDate() === selectedDate.getDate() &&
+                            day.getMonth() === selectedDate.getMonth()
                           ? 'bg-green-500 text-black font-semibold'
                           : 'text-white hover:bg-neutral-700'
                       }`}
                     >
                       {day.getDate()}
                     </button>
-                  ) : (
-                    <div key={index} />
-                  )
-                )}
+                  );
+                })}
               </div>
             </div>
 
             {/* Time Slots */}
             <div className="bg-neutral-800 rounded-xl p-6">
               <h2 className="text-xl text-white mb-4">Available Time Slots</h2>
+              {selectedSlots.length > 0 && (
+                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <p className="text-green-400 text-sm font-medium">
+                    {selectedSlots.length} slot{selectedSlots.length > 1 ? 's' : ''} selected
+                  </p>
+                </div>
+              )}
               <div className="grid sm:grid-cols-2 gap-3">
-                {timeSlots.map((slot, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedSlot(selectedSlot === slot.time ? null : slot.time)}
-                    disabled={slot.available === 0}
-                    className={`p-4 rounded-lg border text-left transition-all ${
-                      selectedSlot === slot.time
-                        ? 'bg-green-500/20 border-green-500'
-                        : slot.available === 0
-                        ? 'bg-neutral-900/50 border-neutral-700 opacity-50 cursor-not-allowed'
-                        : 'bg-neutral-900 border-neutral-700 hover:border-neutral-600'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-green-400" />
-                        <span className="text-white font-medium">{slot.time}</span>
+                {timeSlots.map((slot, index) => {
+                  const isSelected = selectedSlots.includes(slot.time);
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (isSelected) {
+                          // Deselect the slot
+                          setSelectedSlots(selectedSlots.filter(s => s !== slot.time));
+                        } else {
+                          // Select the slot
+                          setSelectedSlots([...selectedSlots, slot.time]);
+                        }
+                      }}
+                      disabled={slot.available === 0}
+                      className={`p-4 rounded-lg border text-left transition-all ${
+                        isSelected
+                          ? 'bg-green-500/20 border-green-500'
+                          : slot.available === 0
+                          ? 'bg-neutral-900/50 border-neutral-700 opacity-50 cursor-not-allowed'
+                          : 'bg-neutral-900 border-neutral-700 hover:border-neutral-600'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-green-400" />
+                          <span className="text-white font-medium">{slot.time}</span>
+                        </div>
+                        {isSelected && (
+                          <Check className="w-5 h-5 text-green-500" />
+                        )}
                       </div>
-                      {selectedSlot === slot.time && (
-                        <Check className="w-5 h-5 text-green-500" />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className={`${
-                        slot.crowd === 'low' ? 'text-green-400' :
-                        slot.crowd === 'medium' ? 'text-yellow-400' :
-                        'text-red-400'
-                      }`}>
-                        {slot.crowd === 'low' ? '🟢 Low' : 
-                         slot.crowd === 'medium' ? '🟡 Medium' : 
-                         '🔴 High'} crowd
-                      </span>
-                      <span className="text-neutral-400">
-                        {slot.available}/{slot.total} spots
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                      <div className="flex items-center justify-between text-sm">
+                        <span className={`${
+                          slot.crowd === 'low' ? 'text-green-400' :
+                          slot.crowd === 'medium' ? 'text-yellow-400' :
+                          'text-red-400'
+                        }`}>
+                          {slot.crowd === 'low' ? '🟢 Low' : 
+                           slot.crowd === 'medium' ? '🟡 Medium' : 
+                           '🔴 High'} crowd
+                        </span>
+                        <span className="text-neutral-400">
+                          {slot.available}/{slot.total} spots
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -182,36 +286,39 @@ export function BookingPage({ onNavigate }) {
             <div className="space-y-4">
               <div className="bg-neutral-900 rounded-xl p-6">
                 <h3 className="text-lg text-white mb-4">Select Trainer</h3>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                  {trainers.map((trainer) => (
-                    <button
-                      key={trainer.id}
-                      onClick={() => setSelectedTrainer(trainer.id)}
-                      className={`w-full text-left p-4 rounded-lg border transition-all ${
-                        selectedTrainer === trainer.id
-                          ? 'bg-green-500/20 border-green-500'
-                          : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="text-3xl">{trainer.image}</div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
+                {loadingTrainers ? (
+                  <div className="text-center py-8">
+                    <p className="text-neutral-400">Loading trainers...</p>
+                  </div>
+                ) : trainers.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-neutral-400">No trainers available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                    {trainers.map((trainer) => (
+                      <button
+                        key={trainer._id}
+                        onClick={() => setSelectedTrainer(trainer._id)}
+                        className={`w-full text-left p-4 rounded-lg border transition-all ${
+                          selectedTrainer === trainer._id
+                            ? 'bg-green-500/20 border-green-500'
+                            : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="text-3xl">👤</div>
                             <h4 className="text-white font-semibold">{trainer.name}</h4>
-                            {selectedTrainer === trainer.id && (
-                              <Check className="w-5 h-5 text-green-500" />
-                            )}
                           </div>
-                          <p className="text-sm text-neutral-400 mb-1">{trainer.specialty}</p>
-                          <div className="flex items-center gap-1">
-                            <span className="text-yellow-400">★</span>
-                            <span className="text-sm text-white">{trainer.rating}</span>
-                          </div>
+                          {selectedTrainer === trainer._id && (
+                            <Check className="w-5 h-5 text-green-500" />
+                          )}
                         </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="bg-neutral-900 rounded-xl p-6">
@@ -225,17 +332,29 @@ export function BookingPage({ onNavigate }) {
                     <span className="text-neutral-400">Date:</span>
                     <span className="text-white">{selectedDate.toDateString()}</span>
                   </div>
-                  {selectedSlot && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-neutral-400">Time:</span>
-                      <span className="text-white">{selectedSlot}</span>
+                  {selectedSlots.length > 0 && (
+                    <div className="text-sm">
+                      <span className="text-neutral-400">Time Slots:</span>
+                      <div className="mt-2 space-y-1">
+                        {selectedSlots.map((slot, idx) => (
+                          <div key={idx} className="flex items-center justify-between bg-neutral-800 p-2 rounded">
+                            <span className="text-white text-xs">{slot}</span>
+                            <button
+                              onClick={() => setSelectedSlots(selectedSlots.filter(s => s !== slot))}
+                              className="text-red-400 hover:text-red-300 text-xs"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {selectedTrainer && (
                     <div className="flex justify-between text-sm">
                       <span className="text-neutral-400">Trainer:</span>
                       <span className="text-white">
-                        {trainers.find(t => t.id === selectedTrainer)?.name}
+                        {trainers.find(t => t._id === selectedTrainer)?.name}
                       </span>
                     </div>
                   )}
@@ -243,10 +362,10 @@ export function BookingPage({ onNavigate }) {
                 
                 <button
                   onClick={handleBooking}
-                  disabled={!selectedSlot || !selectedTrainer}
+                  disabled={selectedSlots.length === 0 || !selectedTrainer}
                   className="w-full py-3 bg-green-500 text-black rounded-lg font-semibold disabled:bg-neutral-700 disabled:text-neutral-500"
                 >
-                  Confirm Booking
+                  Confirm {selectedSlots.length} Booking{selectedSlots.length !== 1 ? 's' : ''}
                 </button>
               </div>
             </div>
@@ -254,16 +373,41 @@ export function BookingPage({ onNavigate }) {
             <div className="bg-neutral-900 rounded-xl p-6">
               <h3 className="text-lg text-white mb-4">Booking Summary</h3>
 
-              <p className="text-neutral-400">Type: {bookingType}</p>
-              <p className="text-neutral-400">Date: {selectedDate.toDateString()}</p>
-              {selectedSlot && <p className="text-neutral-400">Time: {selectedSlot}</p>}
+              <div className="space-y-2 mb-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-400">Type:</span>
+                  <span className="text-white">{bookingType}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-400">Date:</span>
+                  <span className="text-white">{selectedDate.toDateString()}</span>
+                </div>
+                {selectedSlots.length > 0 && (
+                  <div className="text-sm">
+                    <span className="text-neutral-400">Time Slots:</span>
+                    <div className="mt-2 space-y-1">
+                      {selectedSlots.map((slot, idx) => (
+                        <div key={idx} className="flex items-center justify-between bg-neutral-800 p-2 rounded">
+                          <span className="text-white text-xs">{slot}</span>
+                          <button
+                            onClick={() => setSelectedSlots(selectedSlots.filter(s => s !== slot))}
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <button
                 onClick={handleBooking}
-                disabled={!selectedSlot}
-                className="mt-6 w-full py-3 bg-green-500 text-black rounded-lg disabled:bg-neutral-700"
+                disabled={selectedSlots.length === 0}
+                className="w-full py-3 bg-green-500 text-black rounded-lg font-semibold disabled:bg-neutral-700 disabled:text-neutral-500"
               >
-                Confirm Booking
+                Confirm {selectedSlots.length} Booking{selectedSlots.length !== 1 ? 's' : ''}
               </button>
             </div>
           )}

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '../components/ui/Input';
-import { Select } from '../components/ui/Select';
 import { Button } from '../components/ui/Button';
 import { Dumbbell, ArrowLeft } from 'lucide-react';
 
@@ -11,18 +10,12 @@ export const SignUp = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: 'member'
+    confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  const roleOptions = [
-    { value: 'member', label: 'Gym Member' },
-    { value: 'trainer', label: 'Gym Trainer' }
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,11 +61,6 @@ export const SignUp = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    // Role validation
-    if (!formData.role) {
-      newErrors.role = 'Please select a role';
-    }
-
     return newErrors;
   };
 
@@ -100,7 +88,7 @@ export const SignUp = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role
+          role: 'member'
         }),
       });
 
@@ -118,30 +106,21 @@ export const SignUp = () => {
         name: '',
         email: '',
         password: '',
-        confirmPassword: '',
-        role: 'member'
+        confirmPassword: ''
       });
 
-      // Redirect based on role
-      if (formData.role === 'member') {
-        // Redirect to membership plan selection for members
-        setTimeout(() => {
-          navigate('/select-membership', {
-            state: {
-              userData: {
-                name: formData.name,
-                email: formData.email,
-                userId: data.data._id
-              }
+      // Redirect to membership plan selection
+      setTimeout(() => {
+        navigate('/select-membership', {
+          state: {
+            userData: {
+              name: formData.name,
+              email: formData.email,
+              userId: data.data._id
             }
-          });
-        }, 1500);
-      } else {
-        // For trainers, redirect to login page
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
-      }
+          }
+        });
+      }, 1500);
     } catch (error) {
       setApiError(error.message);
     } finally {
@@ -256,16 +235,6 @@ export const SignUp = () => {
                 onChange={handleChange}
                 placeholder="Confirm your password"
                 error={errors.confirmPassword}
-                required
-              />
-
-              <Select
-                label="Role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                options={roleOptions}
-                error={errors.role}
                 required
               />
 
