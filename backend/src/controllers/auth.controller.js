@@ -68,11 +68,16 @@ export const register = async (req, res) => {
 // @access  Public
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     // Validate required fields
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    // Validate role
+    if (!role) {
+      return res.status(400).json({ message: 'Please select your role' });
     }
 
     // Check for user
@@ -85,6 +90,13 @@ export const login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Verify role matches user's actual role
+    if (user.role !== role) {
+      return res.status(403).json({ 
+        message: `You are not registered as a ${role}. Please select the correct role.` 
+      });
     }
 
     res.json({
@@ -110,6 +122,18 @@ export const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate('membershipId');
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all trainers
+// @route   GET /api/auth/trainers
+// @access  Private
+export const getTrainers = async (req, res) => {
+  try {
+    const trainers = await User.find({ role: 'trainer' }).select('name email phone');
+    res.json(trainers);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
