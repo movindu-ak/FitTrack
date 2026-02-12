@@ -4,6 +4,7 @@ import {
   getUserBookings,
   getAllBookings,
   cancelBooking,
+  completeBooking,
   getTrainerBookings,
   updateBookingStatus,
   confirmBooking,
@@ -26,6 +27,7 @@ router.get('/trainer', protect, getTrainerBookings);
 router.get('/trainer/summary', protect, getTrainerBookingSummary);
 router.get('/trainer/:trainerId/availability', protect, getTrainerAvailability);
 router.put('/:id/cancel', protect, cancelBooking);
+router.put('/:id/complete', protect, completeBooking);
 router.put('/:id/status', protect, updateBookingStatus);
 router.put('/:id/confirm', protect, confirmBooking);
 router.put('/:id/trainer-cancel', protect, trainerCancelBooking);

@@ -24,12 +24,16 @@ export const createBooking = async (req, res) => {
       }
     }
 
+    // Auto-confirm bookings without trainers, keep trainer bookings as processing
+    const initialStatus = (type === 'trainer' && trainer) ? 'processing' : 'confirmed';
+
     const booking = await Booking.create({
       user: req.user._id,
       type,
       date,
       timeSlot,
-      trainer: type === 'trainer' ? trainer : undefined
+      trainer: type === 'trainer' ? trainer : undefined,
+      status: initialStatus
     });
 
     res.status(201).json(booking);
@@ -197,6 +201,36 @@ export const cancelBooking = async (req, res) => {
 
     booking.status = 'cancelled';
     booking.cancelledBy = 'member';
+    await booking.save();
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Complete booking
+// @route   PUT /api/bookings/:id/complete
+// @access  Private
+export const completeBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Check if user owns the booking
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Only allow completion for bookings without trainers
+    if (booking.trainer) {
+      return res.status(400).json({ message: 'Trainer bookings cannot be manually completed' });
+    }
+
+    booking.status = 'completed';
     await booking.save();
 
     res.json(booking);
