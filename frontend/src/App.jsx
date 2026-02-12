@@ -9,6 +9,7 @@ import { TrainerDashboard } from './pages/TrainerDashboard';
 import { BookingPage } from './pages/BookingPage';
 import { MembershipPayments } from './pages/MembershipPayments';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminLogin } from './pages/AdminLogin';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -35,17 +36,18 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/admin" element={<AdminLogin />} />
           <Route path="/select-membership" element={<MembershipPlanSelection />} />
           <Route path="/payment" element={<PaymentPage />} />
 
           {/* Protected Routes */}
-          <Route 
+         <Route 
             path="/admin-dashboard" 
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
           <Route 
             path="/trainer-dashboard" 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '../components/ui/Input';
-import { Select } from '../components/ui/Select';
 import { Button } from '../components/ui/Button';
 import { Dumbbell, ArrowLeft } from 'lucide-react';
 
@@ -9,17 +8,11 @@ export const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    role: 'member'
+    password: ''
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-
-  const roleOptions = [
-    { value: 'member', label: 'Gym Member' },
-    { value: 'trainer', label: 'Gym Trainer' }
-  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,8 +66,7 @@ export const Login = () => {
         },
         body: JSON.stringify({
           email: formData.email,
-          password: formData.password,
-          role: formData.role
+          password: formData.password
         }),
       });
 
@@ -95,9 +87,6 @@ export const Login = () => {
 
       // Redirect based on role
       switch (data.data.role) {
-        case 'admin':
-          navigate('/admin-dashboard');
-          break;
         case 'trainer':
           navigate('/trainer-dashboard');
           break;
@@ -196,15 +185,6 @@ export const Login = () => {
                 required
               />
 
-              <Select
-                label="Login As"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                options={roleOptions}
-                required
-              />
-
               <button
                 type="submit"
                 disabled={loading}
@@ -223,6 +203,15 @@ export const Login = () => {
                   className="text-green-400 font-semibold hover:text-green-300 transition"
                 >
                   Sign up
+                </Link>
+              </p>
+              <p className="text-neutral-500 text-xs mt-3">
+                Admin?{' '}
+                <Link 
+                  to="/admin" 
+                  className="text-neutral-400 hover:text-white transition"
+                >
+                  Login here
                 </Link>
               </p>
             </div>
