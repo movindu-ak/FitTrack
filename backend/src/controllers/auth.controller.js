@@ -75,11 +75,6 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    // Validate role
-    if (!role) {
-      return res.status(400).json({ message: 'Please select your role' });
-    }
-
     // Check for user
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
@@ -92,10 +87,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Verify role matches user's actual role
-    if (user.role !== role) {
+    // If role is provided, verify it matches (for admin login)
+    if (role && user.role !== role) {
       return res.status(403).json({ 
-        message: `You are not registered as a ${role}. Please select the correct role.` 
+        message: `You are not registered as a ${role}. Please use the correct login page.` 
       });
     }
 
@@ -134,6 +129,56 @@ export const getTrainers = async (req, res) => {
   try {
     const trainers = await User.find({ role: 'trainer' }).select('name email phone');
     res.json(trainers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Register trainer by admin
+// @route   POST /api/auth/register-trainer
+// @access  Private/Admin
+export const registerTrainer = async (req, res) => {
+  try {
+    const { name, email, password, phone } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Check if user exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    // Create trainer
+    const trainer = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: 'trainer'
+    });
+
+    if (trainer) {
+      res.status(201).json({
+        success: true,
+        message: 'Trainer registered successfully',
+        data: {
+          _id: trainer._id,
+          name: trainer.name,
+          email: trainer.email,
+          phone: trainer.phone,
+          role: trainer.role
+        }
+      });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

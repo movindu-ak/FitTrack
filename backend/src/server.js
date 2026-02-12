@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes.js';
 import bookingRoutes from './routes/booking.routes.js';
 import membershipRoutes from './routes/membership.routes.js';
 import crowdRoutes from './routes/crowd.routes.js';
+import alertRoutes from './routes/alert.routes.js';
 
 // Load env vars
 dotenv.config();
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/memberships', membershipRoutes);
 app.use('/api/crowd', crowdRoutes);
+app.use('/api/alerts', alertRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

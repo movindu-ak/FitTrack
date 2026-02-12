@@ -1,6 +1,6 @@
 import express from 'express';
-import { register, login, getProfile, getTrainers } from '../controllers/auth.controller.js';
-import { protect } from '../middleware/auth.middleware.js';
+import { register, login, getProfile, getTrainers, registerTrainer } from '../controllers/auth.controller.js';
+import { protect, admin } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -8,5 +8,6 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/profile', protect, getProfile);
 router.get('/trainers', protect, getTrainers);
+router.post('/register-trainer', protect, admin, registerTrainer);
 
 export default router;

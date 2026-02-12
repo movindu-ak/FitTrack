@@ -9,7 +9,9 @@ import {
   confirmBooking,
   trainerCancelBooking,
   getTrainerAvailability,
-  getTrainerBookingSummary
+  getTrainerBookingSummary,
+  getTodayBookingsCount,
+  getTodayBookingsDetails
 } from '../controllers/booking.controller.js';
 import { protect, admin } from '../middleware/auth.middleware.js';
 
@@ -18,6 +20,8 @@ const router = express.Router();
 router.post('/', protect, createBooking);
 router.get('/', protect, getUserBookings);
 router.get('/all', protect, admin, getAllBookings);
+router.get('/today/count', protect, admin, getTodayBookingsCount);
+router.get('/today/details', protect, admin, getTodayBookingsDetails);
 router.get('/trainer', protect, getTrainerBookings);
 router.get('/trainer/summary', protect, getTrainerBookingSummary);
 router.get('/trainer/:trainerId/availability', protect, getTrainerAvailability);
