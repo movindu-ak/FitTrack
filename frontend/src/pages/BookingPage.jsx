@@ -97,6 +97,42 @@ export function BookingPage() {
     return days;
   };
 
+  const isTimeSlotPassed = (timeSlot) => {
+    const now = new Date();
+    const selectedDateObj = new Date(selectedDate);
+    
+    // Only check for today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDateObj.setHours(0, 0, 0, 0);
+    
+    if (selectedDateObj.getTime() !== today.getTime()) {
+      return false; // Not today, so time slot is not passed
+    }
+    
+    // Extract end time from timeSlot (e.g., "6:00 AM - 7:30 AM")
+    const timeMatch = timeSlot.match(/- (\d{1,2}):(\d{2}) (AM|PM)/);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      const period = timeMatch[3];
+      
+      // Convert to 24-hour format
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      const slotEndTime = new Date();
+      slotEndTime.setHours(hours, minutes, 0, 0);
+      
+      return now >= slotEndTime;
+    }
+    
+    return false;
+  };
+
   const handleBooking = async () => {
     if (selectedSlots.length === 0) {
       alert('Please select at least one time slot');
@@ -273,6 +309,8 @@ export function BookingPage() {
               <div className="grid sm:grid-cols-2 gap-3">
                 {timeSlots.map((slot, index) => {
                   const isSelected = selectedSlots.includes(slot.time);
+                  const isPassed = isTimeSlotPassed(slot.time);
+                  const isDisabled = slot.available === 0 || isPassed;
                   
                   return (
                     <button
@@ -291,11 +329,11 @@ export function BookingPage() {
                           setSelectedSlots([...selectedSlots, slot.time]);
                         }
                       }}
-                      disabled={slot.available === 0}
+                      disabled={isDisabled}
                       className={`p-4 rounded-lg border text-left transition-all ${
                         isSelected
                           ? 'bg-green-500/20 border-green-500'
-                          : slot.available === 0
+                          : isDisabled
                           ? 'bg-neutral-900/50 border-neutral-700 opacity-50 cursor-not-allowed'
                           : 'bg-neutral-900 border-neutral-700 hover:border-neutral-600'
                       }`}
@@ -311,13 +349,15 @@ export function BookingPage() {
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className={`${
+                          isPassed ? 'text-neutral-500' :
                           slot.crowd === 'low' ? 'text-green-400' :
                           slot.crowd === 'medium' ? 'text-yellow-400' :
                           'text-red-400'
                         }`}>
-                          {slot.crowd === 'low' ? '🟢 Low' : 
+                          {isPassed ? '🔒 Passed' :
+                           slot.crowd === 'low' ? '🟢 Low' : 
                            slot.crowd === 'medium' ? '🟡 Medium' : 
-                           '🔴 High'} crowd
+                           '🔴 High'} {!isPassed && 'crowd'}
                         </span>
                         <span className="text-neutral-400">
                           {slot.available}/{slot.total} spots

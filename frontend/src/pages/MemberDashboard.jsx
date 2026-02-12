@@ -12,6 +12,7 @@ export function MemberDashboard() {
   const [user, setUser] = useState(null);
   const [membership, setMembership] = useState(null);
   const [monthlyWorkouts, setMonthlyWorkouts] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
 
   useEffect(() => {
     fetchBookings();
@@ -70,6 +71,54 @@ export function MemberDashboard() {
         }).length;
         setMonthlyWorkouts(monthlyCount);
         
+        // Calculate streak days (only for completed workouts without trainers)
+        const completedWorkouts = data
+          .filter(booking => booking.status === 'completed' && !booking.trainer)
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        let streak = 0;
+        if (completedWorkouts.length > 0) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          // Get unique dates
+          const uniqueDates = [...new Set(completedWorkouts.map(b => {
+            const d = new Date(b.date);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+          }))].sort((a, b) => b - a).map(t => new Date(t));
+          
+          // Check if workout was done today or yesterday to start streak
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+          
+          let currentCheckDate = today;
+          let foundRecent = false;
+          
+          // Check if there's a workout today or yesterday
+          for (const workoutDate of uniqueDates) {
+            if (workoutDate.getTime() === today.getTime() || workoutDate.getTime() === yesterday.getTime()) {
+              foundRecent = true;
+              break;
+            }
+          }
+          
+          if (foundRecent) {
+            // Calculate consecutive days
+            for (const workoutDate of uniqueDates) {
+              if (workoutDate.getTime() === currentCheckDate.getTime() ||
+                  workoutDate.getTime() === new Date(currentCheckDate.getTime() - 86400000).getTime()) {
+                streak++;
+                currentCheckDate = new Date(workoutDate);
+                currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+              } else {
+                break;
+              }
+            }
+          }
+        }
+        setStreakDays(streak);
+        
         // Filter for upcoming bookings (future dates or recent cancelled ones)
         const upcoming = data
           .filter(booking => {
@@ -90,9 +139,26 @@ export function MemberDashboard() {
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) {
-      return;
+  const handleCancelBooking = async (bookingId, hasTrainer) => {
+    let cancelReason = '';
+    
+    if (hasTrainer) {
+      // Require cancellation reason for trainer bookings
+      cancelReason = prompt('Please provide a reason for cancellation (minimum 10 characters):');
+      
+      if (cancelReason === null) {
+        return; // User clicked cancel
+      }
+      
+      if (!cancelReason || cancelReason.trim().length < 10) {
+        alert('Cancellation reason must be at least 10 characters');
+        return;
+      }
+    } else {
+      // Simple confirmation for non-trainer bookings
+      if (!confirm('Are you sure you want to cancel this booking?')) {
+        return;
+      }
     }
 
     try {
@@ -100,8 +166,10 @@ export function MemberDashboard() {
       const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/cancel`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ cancelReason })
       });
       
       if (response.ok) {
@@ -109,7 +177,8 @@ export function MemberDashboard() {
         fetchBookings();
         alert('Booking cancelled successfully');
       } else {
-        alert('Failed to cancel booking');
+        const data = await response.json();
+        alert(data.message || 'Failed to cancel booking');
       }
     } catch (error) {
       console.error('Error cancelling booking:', error);
@@ -147,6 +216,30 @@ export function MemberDashboard() {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const hasBookingTimePassed = (bookingDate, timeSlot) => {
+    const now = new Date();
+    const booking = new Date(bookingDate);
+    
+    // Extract end time from timeSlot (e.g., "09:00 AM - 11:00 AM")
+    const timeMatch = timeSlot.match(/- (\d{1,2}):(\d{2}) (AM|PM)/);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      const period = timeMatch[3];
+      
+      // Convert to 24-hour format
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      booking.setHours(hours, minutes, 0, 0);
+    }
+    
+    return now >= booking;
   };
 
   const getStatusBadge = (status) => {
@@ -235,9 +328,9 @@ export function MemberDashboard() {
           />
           <StatCard
             title="Streak Days"
-            value="8"
+            value={loadingBookings ? '...' : streakDays.toString()}
             icon={TrendingUp}
-            trend={{ value: '2 days', isPositive: true }}
+            trend={streakDays > 0 ? { value: `${streakDays} days`, isPositive: true } : undefined}
             accentColor="orange"
           />
         </div>
@@ -314,7 +407,7 @@ export function MemberDashboard() {
                           {booking.status !== 'cancelled' && booking.status !== 'completed' && (
                             <>
                               <button 
-                                onClick={() => handleCancelBooking(booking._id)}
+                                onClick={() => handleCancelBooking(booking._id, booking.trainer ? true : false)}
                                 className="text-red-400 hover:text-red-300 text-sm mt-2"
                               >
                                 Cancel
@@ -322,7 +415,13 @@ export function MemberDashboard() {
                               {!booking.trainer && booking.status === 'confirmed' && (
                                 <button 
                                   onClick={() => handleCompleteBooking(booking._id)}
-                                  className="bg-green-500 hover:bg-green-600 text-black px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                  disabled={!hasBookingTimePassed(booking.date, booking.timeSlot)}
+                                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                    hasBookingTimePassed(booking.date, booking.timeSlot)
+                                      ? 'bg-green-500 hover:bg-green-600 text-black cursor-pointer'
+                                      : 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
+                                  }`}
+                                  title={!hasBookingTimePassed(booking.date, booking.timeSlot) ? 'Available after workout time ends' : 'Mark as complete'}
                                 >
                                   Complete
                                 </button>
@@ -433,11 +532,11 @@ export function MemberDashboard() {
                 </div>
                 <div>
                   <p className="text-neutral-400 text-sm">Current Streak</p>
-                  <p className="text-white text-2xl font-bold">8 Days</p>
+                  <p className="text-white text-2xl font-bold">{loadingBookings ? '...' : `${streakDays} Days`}</p>
                 </div>
               </div>
               <p className="text-neutral-400 text-sm">
-                Keep it up! You're on fire 🔥
+                {streakDays > 0 ? "Keep it up! You're on fire 🔥" : "Complete a workout to start your streak!"}
               </p>
             </div>
           </div>
