@@ -13,7 +13,7 @@ export const MembershipPlanSelection = () => {
     {
       id: 'basic',
       name: 'Basic',
-      price: 2000,
+      price: 5000,
       duration: 'Monthly',
       features: [
         'Access to gym equipment',
@@ -25,7 +25,7 @@ export const MembershipPlanSelection = () => {
     {
       id: 'premium',
       name: 'Premium',
-      price: 5000,
+      price: 12000,
       duration: '3 Months',
       popular: true,
       features: [
@@ -39,7 +39,7 @@ export const MembershipPlanSelection = () => {
     {
       id: 'platinum',
       name: 'Platinum',
-      price: 15000,
+      price: 40000,
       duration: 'Annual',
       features: [
         'All Premium features',
@@ -150,7 +150,7 @@ export const MembershipPlanSelection = () => {
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                 <div className="flex items-baseline mb-1">
-                  <span className="text-4xl font-bold text-white">₹{plan.price}</span>
+                  <span className="text-4xl font-bold text-white">LKR {plan.price.toLocaleString()}</span>
                 </div>
                 <p className="text-neutral-400 text-sm">{plan.duration}</p>
               </div>

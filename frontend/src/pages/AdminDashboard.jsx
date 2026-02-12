@@ -70,7 +70,7 @@ export function AdminDashboard({ onNavigate }) {
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard title="Active Members" value="250" icon={Users} trend={{ value: '12%', isPositive: true }} accentColor="green" />
-          <StatCard title="Today's Revenue" value="$2,450" icon={DollarSign} trend={{ value: '8%', isPositive: true }} accentColor="blue" />
+          <StatCard title="Today's Revenue" value="LKR 320,000" icon={DollarSign} trend={{ value: '8%', isPositive: true }} accentColor="blue" />
           <StatCard title="Current Occupancy" value="35%" icon={TrendingUp} accentColor="purple" />
           <StatCard title="Bookings Today" value="42" icon={Calendar} trend={{ value: '5%', isPositive: true }} accentColor="orange" />
         </div>
@@ -164,7 +164,7 @@ export function AdminDashboard({ onNavigate }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#404040" />
               <XAxis dataKey="month" stroke="#9ca3af" />
               <YAxis stroke="#9ca3af" />
-              <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+              <Tooltip formatter={(value) => `LKR ${value.toLocaleString()}`} />
               <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} />
             </LineChart>
           </ResponsiveContainer>

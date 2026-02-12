@@ -226,7 +226,7 @@ export const PaymentPage = () => {
                 label="Amount"
                 type="text"
                 name="amount"
-                value={`₹${formData.amount}`}
+                value={`LKR ${formData.amount.toLocaleString()}`}
                 readOnly
                 disabled
               />
@@ -237,7 +237,7 @@ export const PaymentPage = () => {
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-black px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 hover:shadow-lg hover:shadow-green-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <CreditCard className="w-5 h-5" />
-                {loading ? 'Processing...' : `Pay ₹${formData.amount}`}
+                {loading ? 'Processing...' : `Pay LKR ${formData.amount.toLocaleString()}`}
               </button>
             </form>
 
@@ -269,15 +269,15 @@ export const PaymentPage = () => {
             <div className="border-t border-neutral-800 pt-4 space-y-3">
               <div className="flex justify-between text-neutral-400">
                 <span>Subtotal</span>
-                <span>₹{plan.price}</span>
+                <span>LKR {plan.price.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-neutral-400">
                 <span>Tax (0%)</span>
-                <span>₹0</span>
+                <span>LKR 0</span>
               </div>
               <div className="flex justify-between text-xl font-bold text-white pt-3 border-t border-neutral-800">
                 <span>Total</span>
-                <span>₹{plan.price}</span>
+                <span>LKR {plan.price.toLocaleString()}</span>
               </div>
             </div>
           </div>

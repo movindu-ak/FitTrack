@@ -11,12 +11,19 @@ export function BookingPage() {
   const [selectedTrainer, setSelectedTrainer] = useState(null);
   const [trainers, setTrainers] = useState([]);
   const [loadingTrainers, setLoadingTrainers] = useState(false);
+  const [trainerAvailability, setTrainerAvailability] = useState({});
 
   useEffect(() => {
     if (bookingType === 'trainer') {
       fetchTrainers();
     }
   }, [bookingType]);
+
+  useEffect(() => {
+    if (bookingType === 'trainer' && selectedTrainer && selectedSlots.length > 0) {
+      checkTrainerAvailability();
+    }
+  }, [selectedTrainer, selectedSlots, selectedDate, bookingType]);
 
   const fetchTrainers = async () => {
     setLoadingTrainers(true);
@@ -36,6 +43,33 @@ export function BookingPage() {
       console.error('Error fetching trainers:', error);
     } finally {
       setLoadingTrainers(false);
+    }
+  };
+
+  const checkTrainerAvailability = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const availabilityData = {};
+
+      for (const timeSlot of selectedSlots) {
+        const response = await fetch(
+          `http://localhost:5000/api/bookings/trainer/${selectedTrainer}/availability?date=${selectedDate.toISOString()}&timeSlot=${encodeURIComponent(timeSlot)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          availabilityData[timeSlot] = data;
+        }
+      }
+
+      setTrainerAvailability(availabilityData);
+    } catch (error) {
+      console.error('Error checking trainer availability:', error);
     }
   };
 
@@ -67,6 +101,16 @@ export function BookingPage() {
     if (selectedSlots.length === 0) {
       alert('Please select at least one time slot');
       return;
+    }
+
+    // Check if any trainer slots are fully booked
+    if (bookingType === 'trainer' && selectedTrainer) {
+      for (const slot of selectedSlots) {
+        if (trainerAvailability[slot] && !trainerAvailability[slot].available) {
+          alert(`Cannot book: The selected trainer is fully booked (5/5) for ${slot}. Please select a different timeslot or trainer.`);
+          return;
+        }
+      }
     }
 
     try {
@@ -222,7 +266,7 @@ export function BookingPage() {
               {selectedSlots.length > 0 && (
                 <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
                   <p className="text-green-400 text-sm font-medium">
-                    {selectedSlots.length} slot{selectedSlots.length > 1 ? 's' : ''} selected
+                    {selectedSlots.length} / 2 slot{selectedSlots.length > 1 ? 's' : ''} selected
                   </p>
                 </div>
               )}
@@ -238,6 +282,11 @@ export function BookingPage() {
                           // Deselect the slot
                           setSelectedSlots(selectedSlots.filter(s => s !== slot.time));
                         } else {
+                          // Check if maximum slots are already selected
+                          if (selectedSlots.length >= 2) {
+                            alert('Maximum 2 time slots can be selected');
+                            return;
+                          }
                           // Select the slot
                           setSelectedSlots([...selectedSlots, slot.time]);
                         }
@@ -337,14 +386,27 @@ export function BookingPage() {
                       <span className="text-neutral-400">Time Slots:</span>
                       <div className="mt-2 space-y-1">
                         {selectedSlots.map((slot, idx) => (
-                          <div key={idx} className="flex items-center justify-between bg-neutral-800 p-2 rounded">
-                            <span className="text-white text-xs">{slot}</span>
-                            <button
-                              onClick={() => setSelectedSlots(selectedSlots.filter(s => s !== slot))}
-                              className="text-red-400 hover:text-red-300 text-xs"
-                            >
-                              Remove
-                            </button>
+                          <div key={idx} className="bg-neutral-800 p-2 rounded">
+                            <div className="flex items-center justify-between">
+                              <span className="text-white text-xs">{slot}</span>
+                              <button
+                                onClick={() => setSelectedSlots(selectedSlots.filter(s => s !== slot))}
+                                className="text-red-400 hover:text-red-300 text-xs"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            {selectedTrainer && trainerAvailability[slot] && (
+                              <div className={`mt-1 text-xs ${
+                                trainerAvailability[slot].available 
+                                  ? 'text-green-400' 
+                                  : 'text-red-400'
+                              }`}>
+                                {trainerAvailability[slot].available 
+                                  ? `✓ ${trainerAvailability[slot].spotsRemaining} of 5 spots available`
+                                  : '✗ Fully booked (5/5)'}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

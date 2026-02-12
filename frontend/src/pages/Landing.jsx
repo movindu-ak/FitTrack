@@ -286,7 +286,7 @@ export function Landing() {
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Basic</h3>
                 <div className="flex items-baseline mb-2">
-                  <span className="text-4xl font-bold text-white">₹2,000</span>
+                  <span className="text-4xl font-bold text-white">LKR 5,000</span>
                   <span className="text-neutral-400 ml-2">/month</span>
                 </div>
                 <p className="text-neutral-400 text-sm">Perfect for beginners</p>
@@ -330,7 +330,7 @@ export function Landing() {
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Premium</h3>
                 <div className="flex items-baseline mb-2">
-                  <span className="text-4xl font-bold text-white">₹5,000</span>
+                  <span className="text-4xl font-bold text-white">LKR 12,000</span>
                   <span className="text-neutral-400 ml-2">/3 months</span>
                 </div>
                 <p className="text-neutral-400 text-sm">Best value for money</p>
@@ -372,7 +372,7 @@ export function Landing() {
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Platinum</h3>
                 <div className="flex items-baseline mb-2">
-                  <span className="text-4xl font-bold text-white">₹15,000</span>
+                  <span className="text-4xl font-bold text-white">LKR 40,000</span>
                   <span className="text-neutral-400 ml-2">/year</span>
                 </div>
                 <p className="text-neutral-400 text-sm">Ultimate fitness experience</p>

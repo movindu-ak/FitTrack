@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, LogOut, Calendar, CheckCircle, XCircle, Clock, TrendingUp } from 'lucide-react';
+import { Dumbbell, LogOut, Calendar, CheckCircle, XCircle, Clock, TrendingUp, Users } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useEffect, useState } from 'react';
 
@@ -7,10 +7,12 @@ export const TrainerDashboard = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [bookings, setBookings] = useState([]);
+  const [bookingSummary, setBookingSummary] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchTrainerBookings();
+    fetchBookingSummary();
   }, []);
 
   const fetchTrainerBookings = async () => {
@@ -33,6 +35,24 @@ export const TrainerDashboard = () => {
     }
   };
 
+  const fetchBookingSummary = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/bookings/trainer/summary', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBookingSummary(data);
+      }
+    } catch (error) {
+      console.error('Error fetching booking summary:', error);
+    }
+  };
+
   const updateBookingStatus = async (bookingId, status) => {
     try {
       const token = localStorage.getItem('token');
@@ -47,6 +67,7 @@ export const TrainerDashboard = () => {
       
       if (response.ok) {
         fetchTrainerBookings();
+        fetchBookingSummary();
       }
     } catch (error) {
       console.error('Error updating booking:', error);
@@ -65,6 +86,7 @@ export const TrainerDashboard = () => {
       
       if (response.ok) {
         fetchTrainerBookings();
+        fetchBookingSummary();
       }
     } catch (error) {
       console.error('Error confirming booking:', error);
@@ -72,7 +94,16 @@ export const TrainerDashboard = () => {
   };
 
   const handleCancelBooking = async (bookingId) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) {
+    // Prompt for cancellation reason
+    const cancelReason = prompt('Please provide a reason for cancellation (minimum 10 characters):');
+    
+    if (cancelReason === null) {
+      // User clicked cancel
+      return;
+    }
+    
+    if (!cancelReason || cancelReason.trim().length < 10) {
+      alert('Cancellation reason must be at least 10 characters long.');
       return;
     }
     
@@ -81,15 +112,23 @@ export const TrainerDashboard = () => {
       const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/trainer-cancel`, {
         method: 'PUT',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({ cancelReason: cancelReason.trim() })
       });
       
       if (response.ok) {
         fetchTrainerBookings();
+        fetchBookingSummary();
+        alert('Booking cancelled successfully.');
+      } else {
+        const error = await response.json();
+        alert(`Failed to cancel booking: ${error.message}`);
       }
     } catch (error) {
       console.error('Error cancelling booking:', error);
+      alert('An error occurred while cancelling the booking.');
     }
   };
 
@@ -177,6 +216,102 @@ export const TrainerDashboard = () => {
           <p className="text-gray-400">
             Manage your training sessions and track your client progress
           </p>
+        </div>
+
+        {/* Booking Summary Section */}
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <h3 className="text-2xl font-bold text-white flex items-center">
+              <Users className="h-6 w-6 mr-2 text-green-400" />
+              Timeslot Capacity Overview
+            </h3>
+          </div>
+
+          {bookingSummary.length === 0 ? (
+            <div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-2xl p-8 text-center">
+              <p className="text-gray-400">No upcoming bookings to display</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {bookingSummary.map((daySummary) => (
+                <div
+                  key={daySummary.date}
+                  className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-xl p-6"
+                >
+                  <h4 className="text-lg font-semibold text-white mb-4">
+                    📅 {new Date(daySummary.date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </h4>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {daySummary.slots.map((slot) => (
+                      <div
+                        key={slot.timeSlot}
+                        className="bg-neutral-900/50 border border-neutral-700 rounded-lg p-4"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-purple-400" />
+                            <span className="text-white font-medium text-sm">{slot.timeSlot}</span>
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            slot.count >= 5 
+                              ? 'bg-red-500/20 text-red-400' 
+                              : slot.count >= 3 
+                              ? 'bg-yellow-500/20 text-yellow-400' 
+                              : 'bg-green-500/20 text-green-400'
+                          }`}>
+                            {slot.count}/{slot.capacity}
+                          </span>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <div className="w-full bg-neutral-700 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${
+                                slot.count >= 5 
+                                  ? 'bg-red-500' 
+                                  : slot.count >= 3 
+                                  ? 'bg-yellow-500' 
+                                  : 'bg-green-500'
+                              }`}
+                              style={{ width: `${(slot.count / slot.capacity) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-xs text-gray-400 font-medium mb-1">Members:</p>
+                          {slot.members.map((member, idx) => (
+                            <div key={member.id} className="flex items-center text-xs text-gray-300">
+                              <span className="w-4 text-gray-500">{idx + 1}.</span>
+                              <span className="truncate">{member.name}</span>
+                              <span className={`ml-auto px-2 py-0.5 rounded text-xs ${
+                                member.status === 'confirmed' 
+                                  ? 'bg-blue-500/20 text-blue-400' 
+                                  : 'bg-yellow-500/20 text-yellow-400'
+                              }`}>
+                                {member.status === 'confirmed' ? '✓' : '⏳'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {slot.count < slot.capacity && (
+                          <p className="text-xs text-gray-500 mt-2">
+                            {slot.capacity - slot.count} spot{slot.capacity - slot.count !== 1 ? 's' : ''} available
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Upcoming Sessions */}
@@ -325,6 +460,15 @@ export const TrainerDashboard = () => {
                         <span>🕐 {booking.timeSlot}</span>
                         <span>{booking.type === 'trainer' ? '💪 Personal Training' : '🏋️ Workout'}</span>
                       </div>
+                      {booking.status === 'cancelled' && booking.cancelReason && (
+                        <div className="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-xs">
+                          <span className="text-red-400 font-medium">Cancellation Reason: </span>
+                          <span className="text-gray-300">{booking.cancelReason}</span>
+                          {booking.cancelledBy && (
+                            <span className="text-gray-500 ml-2">(by {booking.cancelledBy})</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

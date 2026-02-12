@@ -5,7 +5,7 @@ export function MembershipPayments({ onNavigate }) {
   const plans = [
     {
       name: 'Basic',
-      price: 2000,
+      price: 5000,
       period: 'month',
       discount: null,
       features: [
@@ -18,7 +18,7 @@ export function MembershipPayments({ onNavigate }) {
     },
     {
       name: 'Premium',
-      price: 4000,
+      price: 10000,
       period: 'month',
       discount: null,
       features: [
@@ -32,7 +32,7 @@ export function MembershipPayments({ onNavigate }) {
     },
     {
       name: 'Annual Premium',
-      price: 30000,
+      price: 100000,
       period: 'year',
       discount: null,
       features: [
@@ -47,10 +47,10 @@ export function MembershipPayments({ onNavigate }) {
   ];
 
   const paymentHistory = [
-    { id: 1, date: 'Dec 15, 2025', amount: 79, plan: 'Premium', status: 'paid', invoice: 'INV-2025-12' },
-    { id: 2, date: 'Nov 15, 2025', amount: 79, plan: 'Premium', status: 'paid', invoice: 'INV-2025-11' },
-    { id: 3, date: 'Oct 15, 2025', amount: 79, plan: 'Premium', status: 'paid', invoice: 'INV-2025-10' },
-    { id: 4, date: 'Sep 15, 2025', amount: 79, plan: 'Premium', status: 'paid', invoice: 'INV-2025-09' },
+    { id: 1, date: 'Dec 15, 2025', amount: 10000, plan: 'Premium', status: 'paid', invoice: 'INV-2025-12' },
+    { id: 2, date: 'Nov 15, 2025', amount: 10000, plan: 'Premium', status: 'paid', invoice: 'INV-2025-11' },
+    { id: 3, date: 'Oct 15, 2025', amount: 10000, plan: 'Premium', status: 'paid', invoice: 'INV-2025-10' },
+    { id: 4, date: 'Sep 15, 2025', amount: 10000, plan: 'Premium', status: 'paid', invoice: 'INV-2025-09' },
   ];
 
   return (
@@ -80,7 +80,7 @@ export function MembershipPayments({ onNavigate }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
               <p className="text-green-100 text-sm mb-1">Monthly Cost</p>
-              <p className="text-2xl font-bold">$79</p>
+              <p className="text-2xl font-bold">LKR 10,000</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
               <p className="text-green-100 text-sm mb-1">Sessions Remaining</p>
@@ -135,14 +135,9 @@ export function MembershipPayments({ onNavigate }) {
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="flex items-baseline space-x-1">
-                    <span className="text-4xl font-bold text-white">LKR{plan.price}</span>
+                    <span className="text-4xl font-bold text-white">LKR {plan.price.toLocaleString()}</span>
                     <span className="text-neutral-400">/ {plan.period}</span>
                   </div>
-                  {plan.monthlyEquivalent && (
-                    <p className="text-green-400 text-sm mt-1">
-                      ${plan.monthlyEquivalent.toFixed(2)} / month
-                    </p>
-                  )}
                 </div>
 
                 <ul className="space-y-3 mb-6">
@@ -197,7 +192,7 @@ export function MembershipPayments({ onNavigate }) {
                       <span className="text-white">{payment.date}</span>
                     </td>
                     <td className="py-4 px-4 text-neutral-300">{payment.plan}</td>
-                    <td className="py-4 px-4 text-white font-semibold">${payment.amount}</td>
+                    <td className="py-4 px-4 text-white font-semibold">LKR {payment.amount.toLocaleString()}</td>
                     <td className="py-4 px-4">
                       <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded">
                         {payment.status.toUpperCase()}

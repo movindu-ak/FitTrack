@@ -56,12 +56,14 @@ export function MemberDashboard() {
       
       if (response.ok) {
         const data = await response.json();
-        // Filter for upcoming bookings (future dates, excluding completed)
+        // Filter for upcoming bookings (future dates or recent cancelled ones)
         const now = new Date();
         const upcoming = data
           .filter(booking => {
             const bookingDate = new Date(booking.date);
-            return bookingDate >= now && booking.status !== 'completed';
+            // Show upcoming bookings or recently cancelled ones
+            return (bookingDate >= now && booking.status !== 'completed') || 
+                   (booking.status === 'cancelled' && bookingDate >= now);
           })
           .sort((a, b) => new Date(a.date) - new Date(b.date))
           .slice(0, 5); // Show next 5 bookings
@@ -285,6 +287,23 @@ export function MemberDashboard() {
                             <Clock className="w-3 h-3 mr-1" />
                             Waiting for trainer confirmation
                           </p>
+                        </div>
+                      )}
+                      {booking.status === 'cancelled' && booking.cancelReason && (
+                        <div className="mt-3 pt-3 border-t border-red-500/30">
+                          <div className="bg-red-500/10 border border-red-500/30 rounded p-3">
+                            <p className="text-red-400 text-xs font-semibold mb-1">
+                              Cancellation Reason:
+                            </p>
+                            <p className="text-neutral-300 text-sm">
+                              {booking.cancelReason}
+                            </p>
+                            {booking.cancelledBy && (
+                              <p className="text-neutral-500 text-xs mt-2">
+                                Cancelled by {booking.cancelledBy}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
