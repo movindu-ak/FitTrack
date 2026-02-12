@@ -188,6 +188,7 @@ export const trainerCancelBooking = async (req, res) => {
 // @access  Private
 export const cancelBooking = async (req, res) => {
   try {
+    const { cancelReason } = req.body;
     const booking = await Booking.findById(req.params.id);
 
     if (!booking) {
@@ -197,6 +198,17 @@ export const cancelBooking = async (req, res) => {
     // Check if user owns the booking
     if (booking.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Require cancellation reason for trainer bookings
+    if (booking.trainer) {
+      if (!cancelReason || cancelReason.trim().length === 0) {
+        return res.status(400).json({ message: 'Cancellation reason is required for trainer bookings' });
+      }
+      if (cancelReason.trim().length < 10) {
+        return res.status(400).json({ message: 'Cancellation reason must be at least 10 characters' });
+      }
+      booking.cancelReason = cancelReason.trim();
     }
 
     booking.status = 'cancelled';
