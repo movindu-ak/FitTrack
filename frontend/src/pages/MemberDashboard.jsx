@@ -11,6 +11,7 @@ export function MemberDashboard() {
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [user, setUser] = useState(null);
   const [membership, setMembership] = useState(null);
+  const [monthlyWorkouts, setMonthlyWorkouts] = useState(0);
 
   useEffect(() => {
     fetchBookings();
@@ -56,8 +57,20 @@ export function MemberDashboard() {
       
       if (response.ok) {
         const data = await response.json();
-        // Filter for upcoming bookings (future dates or recent cancelled ones)
         const now = new Date();
+        
+        // Calculate monthly workouts count
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const monthlyCount = data.filter(booking => {
+          const bookingDate = new Date(booking.date);
+          return bookingDate.getMonth() === currentMonth &&
+                 bookingDate.getFullYear() === currentYear &&
+                 (booking.status === 'confirmed' || booking.status === 'completed');
+        }).length;
+        setMonthlyWorkouts(monthlyCount);
+        
+        // Filter for upcoming bookings (future dates or recent cancelled ones)
         const upcoming = data
           .filter(booking => {
             const bookingDate = new Date(booking.date);
@@ -101,6 +114,33 @@ export function MemberDashboard() {
     } catch (error) {
       console.error('Error cancelling booking:', error);
       alert('Error cancelling booking');
+    }
+  };
+
+  const handleCompleteBooking = async (bookingId) => {
+    if (!confirm('Mark this workout as completed?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/complete`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        // Refresh bookings after completion
+        fetchBookings();
+        alert('Workout completed! Great job! 💪');
+      } else {
+        alert('Failed to mark booking as completed');
+      }
+    } catch (error) {
+      console.error('Error completing booking:', error);
+      alert('Error completing booking');
     }
   };
 
@@ -176,7 +216,7 @@ export function MemberDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Workouts This Month"
-            value="12"
+            value={loadingBookings ? '...' : monthlyWorkouts.toString()}
             icon={Dumbbell}
             trend={{ value: '15%', isPositive: true }}
             accentColor="green"
@@ -272,16 +312,26 @@ export function MemberDashboard() {
                         <div className="flex flex-col items-end space-y-2">
                           {getStatusBadge(booking.status)}
                           {booking.status !== 'cancelled' && booking.status !== 'completed' && (
-                            <button 
-                              onClick={() => handleCancelBooking(booking._id)}
-                              className="text-red-400 hover:text-red-300 text-sm mt-2"
-                            >
-                              Cancel
-                            </button>
+                            <>
+                              <button 
+                                onClick={() => handleCancelBooking(booking._id)}
+                                className="text-red-400 hover:text-red-300 text-sm mt-2"
+                              >
+                                Cancel
+                              </button>
+                              {!booking.trainer && booking.status === 'confirmed' && (
+                                <button 
+                                  onClick={() => handleCompleteBooking(booking._id)}
+                                  className="bg-green-500 hover:bg-green-600 text-black px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                  Complete
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
-                      {booking.status === 'processing' && (
+                      {booking.status === 'processing' && booking.trainer && (
                         <div className="mt-3 pt-3 border-t border-neutral-700">
                           <p className="text-yellow-400 text-xs flex items-center">
                             <Clock className="w-3 h-3 mr-1" />

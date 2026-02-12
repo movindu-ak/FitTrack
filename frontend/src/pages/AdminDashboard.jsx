@@ -238,12 +238,8 @@ export function AdminDashboard({ onNavigate }) {
     { name: 'Annual', value: 45, color: '#a855f7' },
   ];
 
-  const recentBookings = [
-    { id: 1, member: 'John Doe', type: 'Workout Slot', time: '6:00 AM', status: 'confirmed' },
-    { id: 2, member: 'Emma Wilson', type: 'Personal Training', time: '8:00 AM', status: 'confirmed' },
-    { id: 3, member: 'Mike Chen', type: 'Workout Slot', time: '9:30 AM', status: 'pending' },
-    { id: 4, member: 'Sarah Davis', type: 'Personal Training', time: '5:00 PM', status: 'confirmed' },
-  ];
+
+
 
   return (
     <div className="min-h-screen">
@@ -374,6 +370,22 @@ export function AdminDashboard({ onNavigate }) {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
+              
+              {/* Legend */}
+              <div className="mt-4 space-y-2">
+                {membershipDistribution.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-sm text-neutral-300">{item.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">{item.value} members</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
