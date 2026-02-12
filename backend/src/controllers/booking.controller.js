@@ -7,6 +7,23 @@ export const createBooking = async (req, res) => {
   try {
     const { type, date, timeSlot, trainer } = req.body;
 
+    // If booking type is trainer, check the 5-member limit per timeslot
+    if (type === 'trainer' && trainer) {
+      // Count existing confirmed bookings for this trainer at this timeslot
+      const existingBookings = await Booking.countDocuments({
+        trainer,
+        date: new Date(date),
+        timeSlot,
+        status: { $in: ['processing', 'confirmed'] }
+      });
+
+      if (existingBookings >= 5) {
+        return res.status(400).json({ 
+          message: 'This trainer has reached the maximum capacity (5 members) for this timeslot. Please select another timeslot or trainer.' 
+        });
+      }
+    }
+
     const booking = await Booking.create({
       user: req.user._id,
       type,
@@ -126,6 +143,17 @@ export const confirmBooking = async (req, res) => {
 // @access  Private/Trainer
 export const trainerCancelBooking = async (req, res) => {
   try {
+    const { cancelReason } = req.body;
+    
+    // Validate cancellation reason
+    if (!cancelReason || cancelReason.trim().length === 0) {
+      return res.status(400).json({ message: 'Cancellation reason is required' });
+    }
+
+    if (cancelReason.trim().length < 10) {
+      return res.status(400).json({ message: 'Cancellation reason must be at least 10 characters' });
+    }
+
     const booking = await Booking.findById(req.params.id);
 
     if (!booking) {
@@ -138,6 +166,8 @@ export const trainerCancelBooking = async (req, res) => {
     }
 
     booking.status = 'cancelled';
+    booking.cancelReason = cancelReason.trim();
+    booking.cancelledBy = 'trainer';
     await booking.save();
 
     const updatedBooking = await Booking.findById(booking._id)
@@ -166,6 +196,7 @@ export const cancelBooking = async (req, res) => {
     }
 
     booking.status = 'cancelled';
+    booking.cancelledBy = 'member';
     await booking.save();
 
     res.json(booking);
@@ -173,3 +204,93 @@ export const cancelBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get trainer availability for a specific date and timeslot
+// @route   GET /api/bookings/trainer/:trainerId/availability
+// @access  Private
+export const getTrainerAvailability = async (req, res) => {
+  try {
+    const { trainerId } = req.params;
+    const { date, timeSlot } = req.query;
+
+    if (!date || !timeSlot) {
+      return res.status(400).json({ 
+        message: 'Date and timeSlot are required' 
+      });
+    }
+
+    const bookingCount = await Booking.countDocuments({
+      trainer: trainerId,
+      date: new Date(date),
+      timeSlot,
+      status: { $in: ['processing', 'confirmed'] }
+    });
+
+    const available = bookingCount < 5;
+    const spotsRemaining = Math.max(0, 5 - bookingCount);
+
+    res.json({
+      available,
+      spotsRemaining,
+      totalCapacity: 5,
+      currentBookings: bookingCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get trainer booking summary grouped by timeslot
+// @route   GET /api/bookings/trainer/summary
+// @access  Private/Trainer
+export const getTrainerBookingSummary = async (req, res) => {
+  try {
+    const { date } = req.query;
+    const trainerId = req.user._id;
+
+    // If date is provided, filter by that date, otherwise get all upcoming bookings
+    const dateFilter = date ? { date: new Date(date) } : { date: { $gte: new Date() } };
+
+    const bookings = await Booking.find({
+      trainer: trainerId,
+      ...dateFilter,
+      status: { $in: ['processing', 'confirmed'] }
+    }).populate('user', 'name email');
+
+    // Group bookings by date and timeSlot
+    const summary = {};
+    
+    bookings.forEach(booking => {
+      const dateKey = new Date(booking.date).toISOString().split('T')[0];
+      if (!summary[dateKey]) {
+        summary[dateKey] = {};
+      }
+      if (!summary[dateKey][booking.timeSlot]) {
+        summary[dateKey][booking.timeSlot] = {
+          timeSlot: booking.timeSlot,
+          count: 0,
+          capacity: 5,
+          members: []
+        };
+      }
+      summary[dateKey][booking.timeSlot].count++;
+      summary[dateKey][booking.timeSlot].members.push({
+        id: booking._id,
+        name: booking.user?.name,
+        email: booking.user?.email,
+        status: booking.status
+      });
+    });
+
+    // Convert to array format
+    const formattedSummary = Object.entries(summary).map(([date, slots]) => ({
+      date,
+      slots: Object.values(slots)
+    }));
+
+    res.json(formattedSummary);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

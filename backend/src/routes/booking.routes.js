@@ -7,7 +7,9 @@ import {
   getTrainerBookings,
   updateBookingStatus,
   confirmBooking,
-  trainerCancelBooking
+  trainerCancelBooking,
+  getTrainerAvailability,
+  getTrainerBookingSummary
 } from '../controllers/booking.controller.js';
 import { protect, admin } from '../middleware/auth.middleware.js';
 
@@ -17,6 +19,8 @@ router.post('/', protect, createBooking);
 router.get('/', protect, getUserBookings);
 router.get('/all', protect, admin, getAllBookings);
 router.get('/trainer', protect, getTrainerBookings);
+router.get('/trainer/summary', protect, getTrainerBookingSummary);
+router.get('/trainer/:trainerId/availability', protect, getTrainerAvailability);
 router.put('/:id/cancel', protect, cancelBooking);
 router.put('/:id/status', protect, updateBookingStatus);
 router.put('/:id/confirm', protect, confirmBooking);
