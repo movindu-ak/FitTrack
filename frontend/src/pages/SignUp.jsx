@@ -10,7 +10,10 @@ export const SignUp = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: '',
+    ageRange: '',
+    gender: ''
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -61,6 +64,21 @@ export const SignUp = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    // Age range validation
+    if (!formData.ageRange) {
+      newErrors.ageRange = 'Please select your age range';
+    }
+
+    // Gender validation
+    if (!formData.gender) {
+      newErrors.gender = 'Please select your gender';
+    }
+
+    // Phone validation (optional but if provided, must be valid)
+    if (formData.phone && !/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+      newErrors.phone = 'Phone must be 10 digits';
+    }
+
     return newErrors;
   };
 
@@ -88,6 +106,9 @@ export const SignUp = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          phone: formData.phone,
+          ageRange: formData.ageRange,
+          gender: formData.gender,
           role: 'member'
         }),
       });
@@ -106,7 +127,10 @@ export const SignUp = () => {
         name: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        phone: '',
+        ageRange: '',
+        gender: ''
       });
 
       // Redirect to membership plan selection
@@ -116,6 +140,9 @@ export const SignUp = () => {
             userData: {
               name: formData.name,
               email: formData.email,
+              phone: formData.phone,
+              ageRange: formData.ageRange,
+              gender: formData.gender,
               userId: data.data._id
             }
           }
@@ -214,6 +241,84 @@ export const SignUp = () => {
                 placeholder="Enter your email"
                 error={errors.email}
                 required
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Age Range <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="ageRange"
+                  value={formData.ageRange}
+                  onChange={handleChange}
+                  className={`w-full bg-neutral-800 border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-500 transition ${
+                    errors.ageRange ? 'border-red-500' : 'border-neutral-700'
+                  }`}
+                >
+                  <option value="">Select your age range</option>
+                  <option value="10-15">10 - 15 years</option>
+                  <option value="16-21">16 - 21 years</option>
+                  <option value="22-30">22 - 30 years</option>
+                  <option value="31-40">31 - 40 years</option>
+                  <option value="41-50">41 - 50 years</option>
+                  <option value="51+">51+ years</option>
+                </select>
+                {errors.ageRange && (
+                  <p className="text-red-500 text-sm mt-1">{errors.ageRange}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  Gender <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, gender: 'male' }));
+                      if (errors.gender) {
+                        setErrors(prev => ({ ...prev, gender: '' }));
+                      }
+                    }}
+                    className={`flex-1 py-3 rounded-lg border-2 font-semibold transition-all ${
+                      formData.gender === 'male'
+                        ? 'border-green-500 bg-green-500/10 text-green-400'
+                        : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600'
+                    }`}
+                  >
+                    ✓ Male
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, gender: 'female' }));
+                      if (errors.gender) {
+                        setErrors(prev => ({ ...prev, gender: '' }));
+                      }
+                    }}
+                    className={`flex-1 py-3 rounded-lg border-2 font-semibold transition-all ${
+                      formData.gender === 'female'
+                        ? 'border-green-500 bg-green-500/10 text-green-400'
+                        : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600'
+                    }`}
+                  >
+                    ✓ Female
+                  </button>
+                </div>
+                {errors.gender && (
+                  <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+                )}
+              </div>
+
+              <Input
+                label="Phone Number (Optional)"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="07XXXXXXXX"
+                error={errors.phone}
               />
 
               <Input

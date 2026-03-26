@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema({
     default: 'member',
     required: [true, 'Please provide a role']
   },
+  ageRange: {
+    type: String,
+    enum: ['10-15', '16-21', '22-30', '31-40', '41-50', '51+'],
+    trim: true
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female'],
+    trim: true
+  },
   phone: {
     type: String,
     trim: true

@@ -13,7 +13,7 @@ const generateToken = (id) => {
 // @access  Public
 export const register = async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone, role, ageRange, gender } = req.body;
 
     // Validate required fields
     if (!name || !email || !password) {
@@ -30,6 +30,16 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: 'Invalid role specified' });
     }
 
+    // Validate age range
+    if (ageRange && !['10-15', '16-21', '22-30', '31-40', '41-50', '51+'].includes(ageRange)) {
+      return res.status(400).json({ message: 'Invalid age range specified' });
+    }
+
+    // Validate gender
+    if (gender && !['male', 'female'].includes(gender)) {
+      return res.status(400).json({ message: 'Invalid gender specified' });
+    }
+
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -42,7 +52,9 @@ export const register = async (req, res) => {
       email,
       password,
       phone,
-      role: role || 'member'
+      role: role || 'member',
+      ageRange,
+      gender
     });
 
     if (user) {
@@ -54,6 +66,8 @@ export const register = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          ageRange: user.ageRange,
+          gender: user.gender,
           token: generateToken(user._id)
         }
       });
@@ -102,6 +116,9 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
+        ageRange: user.ageRange,
+        gender: user.gender,
         token: generateToken(user._id)
       }
     });
@@ -179,6 +196,55 @@ export const registerTrainer = async (req, res) => {
         }
       });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/auth/update-profile
+// @access  Private
+export const updateProfile = async (req, res) => {
+  try {
+    const { email, phone, ageRange } = req.body;
+    const userId = req.user._id;
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Validate email if changing
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+    }
+
+    // Validate age range
+    if (ageRange && !['10-15', '16-21', '22-30', '31-40', '41-50', '51+'].includes(ageRange)) {
+      return res.status(400).json({ message: 'Invalid age range specified' });
+    }
+
+    // Update user
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (ageRange) user.ageRange = ageRange;
+
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      ageRange: user.ageRange,
+      gender: user.gender,
+      createdAt: user.createdAt
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

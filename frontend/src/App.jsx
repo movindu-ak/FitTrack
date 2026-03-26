@@ -8,6 +8,7 @@ import { MemberDashboard } from './pages/MemberDashboard';
 import { TrainerDashboard } from './pages/TrainerDashboard';
 import { BookingPage } from './pages/BookingPage';
 import { MembershipPayments } from './pages/MembershipPayments';
+import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminLogin } from './pages/AdminLogin';
 
@@ -78,6 +79,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['member']}>
                 <MembershipPayments />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute allowedRoles={['member', 'trainer', 'admin']}>
+                <Profile />
               </ProtectedRoute>
             } 
           />

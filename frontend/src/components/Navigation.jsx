@@ -1,4 +1,4 @@
-import { Dumbbell, LayoutDashboard, Calendar, CreditCard, BarChart3, LogOut } from 'lucide-react';
+import { Dumbbell, LayoutDashboard, Calendar, CreditCard, BarChart3, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function Navigation({ currentPage, role }) {
@@ -8,14 +8,17 @@ export function Navigation({ currentPage, role }) {
     { page: 'member-dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/member-dashboard' },
     { page: 'booking', icon: Calendar, label: 'Book Slot', path: '/booking' },
     { page: 'membership', icon: CreditCard, label: 'Membership', path: '/membership' },
+    { page: 'profile', icon: User, label: 'Profile', path: '/profile' },
   ];
 
   const adminLinks = [
     { page: 'admin', icon: BarChart3, label: 'Admin Panel', path: '/admin-dashboard' },
+    { page: 'profile', icon: User, label: 'Profile', path: '/profile' },
   ];
 
   const trainerLinks = [
     { page: 'trainer', icon: LayoutDashboard, label: 'Dashboard', path: '/trainer-dashboard' },
+    { page: 'profile', icon: User, label: 'Profile', path: '/profile' },
   ];
 
   const getLinks = () => {

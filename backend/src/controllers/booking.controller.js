@@ -7,6 +7,25 @@ export const createBooking = async (req, res) => {
   try {
     const { type, date, timeSlot, trainer } = req.body;
 
+    // Check if user has already booked 2 timeslots for the same day
+    const bookingDate = new Date(date);
+    bookingDate.setHours(0, 0, 0, 0);
+    
+    const nextDay = new Date(bookingDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    const userBookingsCount = await Booking.countDocuments({
+      user: req.user._id,
+      date: { $gte: bookingDate, $lt: nextDay },
+      status: { $in: ['processing', 'confirmed'] }
+    });
+
+    if (userBookingsCount >= 2) {
+      return res.status(400).json({ 
+        message: 'You have already booked the maximum of 2 timeslots for this day. Please select a different date.' 
+      });
+    }
+
     // If booking type is trainer, check the 5-member limit per timeslot
     if (type === 'trainer' && trainer) {
       // Count existing confirmed bookings for this trainer at this timeslot
